@@ -1,4 +1,6 @@
-# terraform-aws-ecs-scheduled-task
+# ecs-scheduled-task
+
+[![Build Status](https://drone.techservices.illinois.edu/api/badges/techservicesillinois/terraform-aws-ecs-scheduled-task/status.svg)](https://drone.techservices.illinois.edu/techservicesillinois/terraform-aws-ecs-scheduled-task)
 
 A module to supports the ability to schedule tasks utilizing AWS Cron Expressions.  
 **NOTE:** Currently, this module does not response to scheduling tasks to  
@@ -14,10 +16,10 @@ module "scheduledtask" {
   name = "task-name"
   schedule_expression = "rate(1 hour)"
 
-  network_configuration {
+  network_configuration = {
     vpc = "vpc-name"
     tier = "nat"
-    assign_public_ip = "false"
+    assign_public_ip = false
   }
 
 }

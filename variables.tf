@@ -17,12 +17,12 @@ variable "cluster" {
 
 variable "desired_count" {
   description = "The number of instances of the task definition to place and keep running"
-  default     = "1"
+  default     = 1
 }
 
 variable "is_enabled" {
   description = "Whether the rule should be enabled (defaults to true)."
-  default     = "true"
+  default     = true
 }
 
 variable "launch_type" {
@@ -32,11 +32,13 @@ variable "launch_type" {
 
 variable "network_configuration" {
   description = "A network configuration block"
+  type        = map(string)
   default     = {}
 }
 
 variable "task_definition" {
   description = "Task definition block (map)"
+  type        = map(string)
   default     = {}
 }
 
@@ -47,5 +49,6 @@ variable "task_definition_arn" {
 
 variable "security_groups" {
   description = "List of security group names (ID does not work!)"
+  type        = list(string)
   default     = []
 }
