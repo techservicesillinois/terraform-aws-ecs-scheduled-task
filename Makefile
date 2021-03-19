@@ -2,6 +2,8 @@
 
 REPO := $(shell basename $(shell git remote get-url origin) .git)
 
+all: test
+
 test: .terraform
 	AWS_DEFAULT_REGION=us-east-2 terraform validate
 	terraform fmt -check
