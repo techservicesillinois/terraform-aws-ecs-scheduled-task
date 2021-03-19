@@ -1,6 +1,6 @@
 # ecs-scheduled-task
 
-[![Build Status](https://drone.techservices.illinois.edu/api/badges/techservicesillinois/terraform-aws-ecs-scheduled-task/status.svg)](https://drone.techservices.illinois.edu/techservicesillinois/terraform-aws-ecs-scheduled-task)
+[![Terraform actions status](https://github.com/techservicesillinois/terraform-aws-ecs-scheduled-task/workflows/terraform/badge.svg)](https://github.com/techservicesillinois/terraform-aws-ecs-scheduled-task/actions)
 
 A module to supports the ability to schedule tasks utilizing AWS Cron Expressions.  
 **NOTE:** Currently, this module does not response to scheduling tasks to  
@@ -62,6 +62,8 @@ of the task definition that you want to run in your service. If given, the task
 definition block is ignored.
 
 * `security_groups` - List of security group names (ID does not work!)
+
+* `tags` - Tags to be applied to resources where supported.
 
 network_configuration
 -----------------------

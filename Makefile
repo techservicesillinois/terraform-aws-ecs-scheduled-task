@@ -19,7 +19,7 @@ test: .terraform
 	# Do NOT define a variable in files other than variables.tf
 	! egrep 'variable\s+"\w+"\s*\{' $(shell find . -name '*.tf' ! -name variables.tf)
 	# DO put a badge in README.md
-	grep -q "\[\!\[Build Status\]([^)]*$(REPO)/status.svg)\]([^)]*$(REPO))" README.md
+	grep -q "\[\!\[Terraform actions status\]([^)]*$(REPO)/workflows/terraform/badge.svg)\]([^)]*$(REPO)/actions)" README.md
 	# Do NOT use ?ref= in source lines in a README.md!
 	! grep 'source\s*=.*?ref=' *.tf README.md
 	# Do NOT start a source line with git::

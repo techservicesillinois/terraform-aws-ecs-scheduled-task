@@ -15,6 +15,8 @@ resource "aws_ecs_task_definition" "fargate" {
   cpu                      = local.cpu
   memory                   = local.memory
   requires_compatibilities = ["FARGATE"]
+
+  tags = merge({ "Name" = var.name }, var.tags)
 }
 
 resource "aws_ecs_task_definition" "ec2" {
@@ -34,12 +36,16 @@ resource "aws_ecs_task_definition" "ec2" {
   cpu                      = local.cpu
   memory                   = local.memory
   requires_compatibilities = ["EC2"]
+
+  tags = merge({ "Name" = var.name }, var.tags)
 }
 
 resource "aws_cloudwatch_event_rule" "default" {
   name                = var.name
   schedule_expression = var.schedule_expression
   is_enabled          = var.is_enabled
+
+  tags = merge({ "Name" = var.name }, var.tags)
 }
 
 resource "aws_cloudwatch_event_target" "default" {
@@ -73,12 +79,16 @@ resource "aws_security_group" "default" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = merge({ "Name" = var.name }, var.tags)
 }
 
 ### Boiler plate role for ecs events. Role name needs to be unique. ---------
 resource "aws_iam_role" "ecs_events_role" {
   name               = var.name
   assume_role_policy = data.aws_iam_policy_document.ecs_events_policy.json
+
+  tags = merge({ "Name" = var.name }, var.tags)
 }
 
 resource "aws_iam_role_policy_attachment" "events_service_role_attachment" {
