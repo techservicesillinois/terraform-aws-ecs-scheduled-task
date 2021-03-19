@@ -52,3 +52,9 @@ variable "security_groups" {
   type        = list(string)
   default     = []
 }
+
+variable "tags" {
+  description = "Tags to be applied to resources where supported"
+  type        = map(string)
+  default     = {}
+}
