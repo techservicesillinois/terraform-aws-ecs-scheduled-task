@@ -11,7 +11,7 @@ variable "schedule_expression" {
 #### Optional
 
 variable "cluster" {
-  description = "A name of an ECS cluster"
+  description = "ECS cluster name"
   default     = "default"
 }
 
