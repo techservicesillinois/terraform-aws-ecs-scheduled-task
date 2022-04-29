@@ -2,26 +2,26 @@
 
 [![Terraform actions status](https://github.com/techservicesillinois/terraform-aws-ecs-scheduled-task/workflows/terraform/badge.svg)](https://github.com/techservicesillinois/terraform-aws-ecs-scheduled-task/actions)
 
-A module to supports the ability to schedule tasks utilizing AWS Cron Expressions.  
-**NOTE:** Currently, this module does not response to scheduling tasks to  
-CloudWatch Events in ECS.
+Allow scheduling tasks utilizing AWS cron expressions.  
+
+**NOTE:** Currently, this module does not support scheduling tasks in
+response to  CloudWatch Events in ECS.
 
 Example Usage
 ----------------
 
 ```hcl
-module "scheduledtask" {
+module "scheduled-task" {
   source = "git@github.com:techservicesillinois/terraform-aws-ecs-scheduled-task"
 
   name = "task-name"
   schedule_expression = "rate(1 hour)"
 
   network_configuration = {
-    vpc = "vpc-name"
-    tier = "nat"
+    vpc      	     = "vpc-name"
+    subnet_type      = "campus"
     assign_public_ip = false
   }
-
 }
 ```
 
@@ -30,29 +30,22 @@ Argument Reference
 
 ### Required
 
-* `name` -  The name of task to be scheduled. (Best practice would involve  
-prefixing your service name to the task to uniquely identify the scheduled  
-task)
+* `name` -  The name of task to be scheduled. (Best practice would involve prefixing your service name to the task to uniquely identify the scheduled task)
 
-* `schedule_expression` -  The scheduling expression.  
-For example, cron(0 20 * * ? *) or rate(5 minutes).
+* `schedule_expression` -  The scheduling expression. For example, cron(0 20 * * ? *) or rate(5 minutes).
 
 ### Optional
 
 * `cluster` - A name of an ECS cluster. (Default = `default`)
 
-* `desired_count` - The number of instances of the task definition to  
-place and keep  running. (Default = `1`)
+* `desired_count` - The number of instances of the task definition to place and keep  running. (Default = `1`)
 
 * `is_enabled` - Whether the rule should be enabled (Default = `true`).
 
-* `launch_type` - The launch type on which to run the service. The valid  
-values are EC2 and FARGATE. (Default = `FARGATE`)
+* `launch_type` - The launch type on which to run the service. The valid values are EC2 and FARGATE. (Default = `FARGATE`)
 
-* `network_configuration` -  A [Network Configuration](#network_configuration) block.  
-This parameter is required for task definitions that use the `awsvpc` network mode
-to receive their own Elastic Network Interface, and it is not supported for other  
-network modes.
+* `network_configuration` -  A [Network Configuration](#network_configuration) block.  This parameter is required for task definitions that use the `awsvpc` network mode
+to receive their own Elastic Network Interface, and it is not supported for other  network modes.
 
 * `volume` - (Optional) A set of [volume blocks](#volume) that
 containers in your task may use. Volume blocks are documented below.
@@ -60,9 +53,7 @@ containers in your task may use. Volume blocks are documented below.
 * `task_definition` - (Optional) A [Task definition](#task_definition)
 block. Task definition blocks are documented below
 
-* `task_definition_arn` -  The family and revision (family:revision) or full ARN  
-of the task definition that you want to run in your service. If given, the task  
-definition block is ignored.
+* `task_definition_arn` -  The family and revision (family:revision) or full ARN of the task definition that you want to run in your service. If given, the task definition block is ignored.
 
 * `security_groups` - List of security group names (ID does not work!)
 
@@ -73,16 +64,15 @@ network_configuration
 
 A `network_configuration` block supports the following:
 
-* assign_public_ip (optional) - Default to `false`
+* `assign_public_ip` – (Optional) Default is `false`.
 
-* `tier` - (Required) A subnet tier tag (e.g., public, private, nat)  
-to determine subnets to be associated with the task orservice.
+* `encrypted` - (Optional) Encrypt data on volume at rest. Default: true.
 
-* `vpc` - (Required) The name of the virtual private cloud to be associated  
-with the task or service. **NOTE:** Required when using `tier`.
+* `subnet_type` - (Required) Subnet type (e.g., 'campus', 'private', 'public') for resource placement.
 
-* `subnets` - (Required) The subnet IDs to associated with the task or service.  
-**NOTE:** Optional when using `tier`.
+* `subnets` - (Required) The subnet IDs to associate with the task or service. **NOTE:** Optional when using `subnet_type`.
+
+* `vpc` - (Required) The name of the virtual private cloud to be associated with the task or service. **NOTE:** Required when using `subnet_type`.
 
 `task_definition`
 -----------------
@@ -197,8 +187,6 @@ The following attributes are exported:
 
 * `name` - The name of the scheduled task.
 
-* `schedule_expression` - The cron like expression that determines  
-when your scheduled task will run.
+* `schedule_expression` - The cron-like expression that determines when the scheduled task is to run.
 
-* `task_definition_arn` - Full ARN of the Task Definition created
-for the scheduled task.
+* `task_definition_arn` - Full ARN of the task definition created for the scheduled task.
