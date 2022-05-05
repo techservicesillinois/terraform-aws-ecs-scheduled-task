@@ -12,11 +12,9 @@ locals {
   target_task_definition_arn = var.task_definition_arn == "" ? local.task_definition_arn : var.task_definition_arn
 }
 
-# subnet ids parsed from "private, public, or nat" tier
 locals {
   all_subnets = distinct(
-    concat(flatten(data.aws_subnet_ids.selected.*.ids), local.subnets),
-  )
+  concat(flatten([for v in module.get-subnets : v.subnets.ids]), local.subnets))
 }
 
 # task_definition map
@@ -36,7 +34,7 @@ locals {
 # network_configuration map
 locals {
   assign_public_ip = lookup(var.network_configuration, "assign_public_ip", false)
-  tier             = lookup(var.network_configuration, "tier", "")
-  vpc              = lookup(var.network_configuration, "vpc", "")
+  subnet_type      = lookup(var.network_configuration, "subnet_type", null)
+  vpc              = lookup(var.network_configuration, "vpc", null)
   subnets          = compact(split(" ", lookup(var.network_configuration, "subnets", "")))
 }
