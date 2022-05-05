@@ -98,7 +98,7 @@ resource "aws_cloudwatch_event_target" "default" {
 
 resource "aws_security_group" "default" {
   name   = var.name
-  vpc_id = data.aws_vpc.selected[0].id
+  vpc_id = module.get-subnets[0].vpc.id
 
   egress {
     from_port   = 0
