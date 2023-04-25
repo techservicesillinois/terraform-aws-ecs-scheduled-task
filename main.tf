@@ -1,16 +1,17 @@
 resource "aws_ecs_task_definition" "fargate" {
-  count = var.task_definition_arn == "" && var.launch_type == "FARGATE" ? 1 : 0
+  # for_each = toset(var.task_definition_arn == null ? [var.launch_type] : [])
+  for_each = toset(var.task_definition_arn == "" ? [var.launch_type] : [])
 
   family                = var.name
-  container_definitions = file(local.container_definition_file)
-  task_role_arn         = local.task_role_arn
+  container_definitions = local.container_definitions
+  task_role_arn         = var.task_definition.task_role_arn
 
   execution_role_arn = format(
     "arn:aws:iam::%s:role/ecsTaskExecutionRole",
     data.aws_caller_identity.current.account_id,
   )
 
-  network_mode = local.network_mode
+  network_mode = var.task_definition.network_mode
 
   dynamic "volume" {
     for_each = var.volume
@@ -39,11 +40,11 @@ resource "aws_ecs_task_definition" "fargate" {
     }
   }
 
-  cpu                      = local.cpu
-  memory                   = local.memory
+  cpu                      = var.task_definition.cpu
+  memory                   = var.task_definition.memory
   requires_compatibilities = ["FARGATE"]
 
-  tags = merge({ "Name" = var.name }, var.tags)
+  tags = merge({ Name = var.name }, var.tags)
 }
 
 resource "aws_ecs_task_definition" "ec2" {
@@ -64,7 +65,7 @@ resource "aws_ecs_task_definition" "ec2" {
   memory                   = local.memory
   requires_compatibilities = ["EC2"]
 
-  tags = merge({ "Name" = var.name }, var.tags)
+  tags = merge({ Name = var.name }, var.tags)
 }
 
 resource "aws_cloudwatch_event_rule" "default" {
@@ -72,7 +73,7 @@ resource "aws_cloudwatch_event_rule" "default" {
   schedule_expression = var.schedule_expression
   is_enabled          = var.is_enabled
 
-  tags = merge({ "Name" = var.name }, var.tags)
+  tags = merge({ Name = var.name }, var.tags)
 }
 
 resource "aws_cloudwatch_event_target" "default" {
@@ -107,7 +108,7 @@ resource "aws_security_group" "default" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = merge({ "Name" = var.name }, var.tags)
+  tags = merge({ Name = var.name }, var.tags)
 }
 
 ### Boiler plate role for ecs events. Role name needs to be unique. ---------
@@ -115,7 +116,7 @@ resource "aws_iam_role" "ecs_events_role" {
   name               = var.name
   assume_role_policy = data.aws_iam_policy_document.ecs_events_policy.json
 
-  tags = merge({ "Name" = var.name }, var.tags)
+  tags = merge({ Name = var.name }, var.tags)
 }
 
 resource "aws_iam_role_policy_attachment" "events_service_role_attachment" {
