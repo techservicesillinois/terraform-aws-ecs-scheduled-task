@@ -1,14 +1,20 @@
 # task_defintion_arn
-locals {
-  task_definition_arn = element(
-    concat(
-      aws_ecs_task_definition.fargate.*.arn,
-      aws_ecs_task_definition.ec2.*.arn,
-      [""],
-    ),
-    0,
-  )
+#locals {
+# task_definition_arn = element(
+#   concat(
+#     aws_ecs_task_definition.fargate.*.arn,
+#     aws_ecs_task_definition.ec2.*.arn,
+#     [""],
+#   ),
+#   0,
+# )
+#
+# target_task_definition_arn = var.task_definition_arn == "" ? local.task_definition_arn : var.task_definition_arn
+#}
 
+locals {
+  # task_definition_arn = var.task_definition_arn != null ? var.task_definition_arn : aws_ecs_task_definition.fargate[var.launch_type].arn
+  task_definition_arn        = var.task_definition_arn != "" ? var.task_definition_arn : aws_ecs_task_definition.fargate[var.launch_type].arn
   target_task_definition_arn = var.task_definition_arn == "" ? local.task_definition_arn : var.task_definition_arn
 }
 
@@ -17,14 +23,16 @@ locals {
   concat(flatten([for v in module.get-subnets : v.subnets.ids]), local.subnets))
 }
 
+# Compute container definition file name, then determine whether it's
+# a template or simply a json file.
+
+locals {
+  container_definition_file = var.task_definition.template_variables != null ? (var.task_definition.container_definition_file != null ? var.task_definition.container_definition_file : "containers.json.tftpl") : (var.task_definition.container_definition_file != null ? var.task_definition.container_definition_file : "containers.json")
+  container_definitions     = endswith(local.container_definition_file, ".tftpl") ? try(templatefile(local.container_definition_file, var.task_definition.template_variables), false) : file(local.container_definition_file)
+}
+
 # task_definition map
 locals {
-  container_definition_file = lookup(
-    var.task_definition,
-    "container_definition_file",
-    "containers.json",
-  )
-
   cpu           = lookup(var.task_definition, "cpu", 256)
   memory        = lookup(var.task_definition, "memory", 512)
   network_mode  = lookup(var.task_definition, "network_mode", "awsvpc")
