@@ -1,17 +1,18 @@
-resource "aws_ecs_task_definition" "fargate" {
-  # for_each = toset(var.task_definition_arn == null ? [var.launch_type] : [])
-  for_each = toset(var.task_definition_arn == "" ? [var.launch_type] : [])
-
-  family                = var.name
-  container_definitions = local.container_definitions
-  task_role_arn         = var.task_definition.task_role_arn
+resource "aws_ecs_task_definition" "default" {
+  for_each = toset(var.task_definition_arn == null ? [var.launch_type] : [])
 
   execution_role_arn = format(
     "arn:aws:iam::%s:role/ecsTaskExecutionRole",
     data.aws_caller_identity.current.account_id,
   )
-
-  network_mode = var.task_definition.network_mode
+  family                   = var.name
+  container_definitions    = local.container_definitions
+  cpu                      = var.task_definition.cpu
+  memory                   = var.task_definition.memory
+  network_mode             = var.task_definition.network_mode
+  requires_compatibilities = var.launch_type == "FARGATE" ? ["FARGATE"] : ["EC2"]
+  tags                     = merge({ Name = var.name }, var.tags)
+  task_role_arn            = var.task_definition.task_role_arn
 
   dynamic "volume" {
     for_each = var.volume
@@ -39,53 +40,25 @@ resource "aws_ecs_task_definition" "fargate" {
       }
     }
   }
-
-  cpu                      = var.task_definition.cpu
-  memory                   = var.task_definition.memory
-  requires_compatibilities = ["FARGATE"]
-
-  tags = merge({ Name = var.name }, var.tags)
-}
-
-resource "aws_ecs_task_definition" "ec2" {
-  count = var.task_definition_arn == "" && var.launch_type == "EC2" ? 1 : 0
-
-  family                = var.name
-  container_definitions = file(local.container_definition_file)
-  task_role_arn         = local.task_role_arn
-
-  execution_role_arn = format(
-    "arn:aws:iam::%s:role/ecsTaskExecutionRole",
-    data.aws_caller_identity.current.account_id,
-  )
-
-  network_mode = local.network_mode
-
-  cpu                      = local.cpu
-  memory                   = local.memory
-  requires_compatibilities = ["EC2"]
-
-  tags = merge({ Name = var.name }, var.tags)
 }
 
 resource "aws_cloudwatch_event_rule" "default" {
+  is_enabled          = var.is_enabled
   name                = var.name
   schedule_expression = var.schedule_expression
-  is_enabled          = var.is_enabled
-
-  tags = merge({ Name = var.name }, var.tags)
+  tags                = merge({ Name = var.name }, var.tags)
 }
 
 resource "aws_cloudwatch_event_target" "default" {
-  target_id = var.name
-  rule      = aws_cloudwatch_event_rule.default.name
   arn       = data.aws_ecs_cluster.selected.id
   role_arn  = aws_iam_role.ecs_events_role.arn
+  rule      = aws_cloudwatch_event_rule.default.name
+  target_id = var.name
 
   ecs_target {
+    launch_type         = var.launch_type
     task_count          = var.desired_count
     task_definition_arn = local.target_task_definition_arn
-    launch_type         = var.launch_type
 
     network_configuration {
       subnets = local.all_subnets
@@ -97,8 +70,11 @@ resource "aws_cloudwatch_event_target" "default" {
   }
 }
 
+# TODO: Does this need to be made?
+
 resource "aws_security_group" "default" {
   name   = var.name
+  tags   = merge({ Name = var.name }, var.tags)
   vpc_id = module.get-subnets[0].vpc.id
 
   egress {
@@ -107,21 +83,17 @@ resource "aws_security_group" "default" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
-  tags = merge({ Name = var.name }, var.tags)
 }
 
-### Boiler plate role for ecs events. Role name needs to be unique. ---------
 resource "aws_iam_role" "ecs_events_role" {
-  name               = var.name
   assume_role_policy = data.aws_iam_policy_document.ecs_events_policy.json
-
-  tags = merge({ Name = var.name }, var.tags)
+  name               = var.name
+  tags               = merge({ Name = var.name }, var.tags)
 }
 
 resource "aws_iam_role_policy_attachment" "events_service_role_attachment" {
-  role       = aws_iam_role.ecs_events_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceEventsRole"
+  role       = aws_iam_role.ecs_events_role.name
 }
 
 data "aws_iam_policy_document" "ecs_events_policy" {

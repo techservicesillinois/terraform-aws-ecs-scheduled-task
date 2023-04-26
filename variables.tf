@@ -1,15 +1,3 @@
-#### Required
-
-variable "name" {
-  description = "The name of the ECS service"
-}
-
-variable "schedule_expression" {
-  description = "The scheduling expression. For example, cron(0 20 * * ? *) or rate(5 minutes)."
-}
-
-#### Optional
-
 variable "cluster" {
   description = "ECS cluster name"
   default     = "default"
@@ -26,25 +14,50 @@ variable "is_enabled" {
 }
 
 variable "launch_type" {
-  description = "The launch type on which to run the service. The valid values are EC2 and FARGATE."
+  description = "Launch type for the service. Valid values are EC2 and FARGATE."
   default     = "FARGATE"
+
+  validation {
+    condition     = try(contains(["EC2", "FARGATE"], var.launch_type), true)
+    error_message = "The 'launch_type' is not one of the valid values 'EC2' or 'FARGATE'."
+  }
+}
+
+variable "name" {
+  description = "ECS service name"
 }
 
 variable "network_configuration" {
-  description = "A network configuration block"
-  type        = map(string)
-  default     = {}
+  description = "Network configuration block"
+  type = object({
+    assign_public_ip     = optional(bool, false)
+    ports                = optional(list(number), [])
+    security_group_ids   = optional(list(string), [])
+    security_group_names = optional(list(string), [])
+    subnet_ids           = optional(list(string), [])
+    subnet_type          = optional(string)
+    vpc                  = optional(string)
+  })
+  default = null
+
+  # Validate that either subnet_ids or both subnet_type and vpc are defined.
+
+  validation {
+    # TODO: This validation rule should be made more robust.
+    condition     = var.network_configuration == null || can(length(var.network_configuration.subnet_ids) > 0 || (var.network_configuration.subnet_type != null && var.network_configuration.vpc != null))
+    error_message = "The 'network_configuration' block must define both 'subnet_type' and 'vpc', or must define 'subnet_ids'."
+  }
+
+  # Validate subnet_type (if specified).
+
+  validation {
+    condition     = try(contains(["campus", "private", "public"], var.network_configuration.subnet_type), true)
+    error_message = "The 'subnet_type' specified in the 'network_configuration' block is not one of the valid values 'campus', 'private', or 'public'."
+  }
 }
 
-#variable "task_definition" {
-# description = "Task definition block (map)"
-# type        = map(string)
-# default     = {}
-#}
-
-variable "task_definition_arn" {
-  description = "The ARN of the task definition to use if the event target is an Amazon ECS cluster."
-  default     = ""
+variable "schedule_expression" {
+  description = "The scheduling expression. For example, cron(0 20 * * ? *) or rate(5 minutes)."
 }
 
 variable "task_definition" {
@@ -62,6 +75,11 @@ variable "task_definition" {
     }))
   })
   default = null
+}
+
+variable "task_definition_arn" {
+  description = "The family and revision (family:revision) or full ARN of a task definition for the ECS service"
+  default     = null
 }
 
 variable "security_groups" {
@@ -94,4 +112,12 @@ variable "volume" {
     })
   }))
   default = []
+}
+
+# Debugging.
+
+variable "_debug" {
+  description = "Produce debug output (boolean)"
+  type        = bool
+  default     = false
 }

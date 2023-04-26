@@ -1,26 +1,11 @@
-# task_defintion_arn
-#locals {
-# task_definition_arn = element(
-#   concat(
-#     aws_ecs_task_definition.fargate.*.arn,
-#     aws_ecs_task_definition.ec2.*.arn,
-#     [""],
-#   ),
-#   0,
-# )
-#
-# target_task_definition_arn = var.task_definition_arn == "" ? local.task_definition_arn : var.task_definition_arn
-#}
-
 locals {
-  # task_definition_arn = var.task_definition_arn != null ? var.task_definition_arn : aws_ecs_task_definition.fargate[var.launch_type].arn
-  task_definition_arn        = var.task_definition_arn != "" ? var.task_definition_arn : aws_ecs_task_definition.fargate[var.launch_type].arn
-  target_task_definition_arn = var.task_definition_arn == "" ? local.task_definition_arn : var.task_definition_arn
+  # FIXME: is target_task_definition_arn redundant?
+  task_definition_arn        = var.task_definition_arn != null ? var.task_definition_arn : aws_ecs_task_definition.default[var.launch_type].arn
+  target_task_definition_arn = var.task_definition_arn == null ? local.task_definition_arn : var.task_definition_arn
 }
 
 locals {
-  all_subnets = distinct(
-  concat(flatten([for v in module.get-subnets : v.subnets.ids]), local.subnets))
+  all_subnets = distinct(concat(local.module_subnet_ids, try(var.network_configuration.subnet_ids, [])))
 }
 
 # Compute container definition file name, then determine whether it's
@@ -29,20 +14,4 @@ locals {
 locals {
   container_definition_file = var.task_definition.template_variables != null ? (var.task_definition.container_definition_file != null ? var.task_definition.container_definition_file : "containers.json.tftpl") : (var.task_definition.container_definition_file != null ? var.task_definition.container_definition_file : "containers.json")
   container_definitions     = endswith(local.container_definition_file, ".tftpl") ? try(templatefile(local.container_definition_file, var.task_definition.template_variables), false) : file(local.container_definition_file)
-}
-
-# task_definition map
-locals {
-  cpu           = lookup(var.task_definition, "cpu", 256)
-  memory        = lookup(var.task_definition, "memory", 512)
-  network_mode  = lookup(var.task_definition, "network_mode", "awsvpc")
-  task_role_arn = lookup(var.task_definition, "task_role_arn", "")
-}
-
-# network_configuration map
-locals {
-  assign_public_ip = lookup(var.network_configuration, "assign_public_ip", false)
-  subnet_type      = lookup(var.network_configuration, "subnet_type", null)
-  vpc              = lookup(var.network_configuration, "vpc", null)
-  subnets          = compact(split(" ", lookup(var.network_configuration, "subnets", "")))
 }

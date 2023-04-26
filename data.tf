@@ -2,10 +2,14 @@ data "aws_caller_identity" "current" {}
 
 module "get-subnets" {
   source = "github.com/techservicesillinois/terraform-aws-util//modules/get-subnets?ref=v3.0.4"
-  count  = local.subnet_type != null ? 1 : 0
 
-  subnet_type = local.subnet_type
-  vpc         = local.vpc
+  count       = var.network_configuration.subnet_type != null ? 1 : 0
+  subnet_type = var.network_configuration.subnet_type
+  vpc         = var.network_configuration.vpc
+}
+
+locals {
+  module_subnet_ids = var.network_configuration.subnet_type != null ? try(module.get-subnets[0].subnets.ids, []) : []
 }
 
 data "aws_ecs_cluster" "selected" {
