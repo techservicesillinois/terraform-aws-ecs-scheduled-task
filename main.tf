@@ -11,7 +11,7 @@ resource "aws_ecs_task_definition" "default" {
   memory                   = var.task_definition.memory
   network_mode             = var.task_definition.network_mode
   requires_compatibilities = var.launch_type == "FARGATE" ? ["FARGATE"] : ["EC2"]
-  tags                     = merge({ Name = var.name }, var.tags)
+  tags                     = local.tags
   task_role_arn            = var.task_definition.task_role_arn
 
   dynamic "volume" {
@@ -46,7 +46,7 @@ resource "aws_cloudwatch_event_rule" "default" {
   is_enabled          = var.is_enabled
   name                = var.name
   schedule_expression = var.schedule_expression
-  tags                = merge({ Name = var.name }, var.tags)
+  tags                = local.tags
 }
 
 resource "aws_cloudwatch_event_target" "default" {
@@ -57,6 +57,8 @@ resource "aws_cloudwatch_event_target" "default" {
 
   ecs_target {
     launch_type         = var.launch_type
+    propagate_tags      = "TASK_DEFINITION"
+    tags                = local.tags
     task_count          = var.desired_count
     task_definition_arn = local.target_task_definition_arn
 
@@ -74,7 +76,7 @@ resource "aws_cloudwatch_event_target" "default" {
 
 resource "aws_security_group" "default" {
   name   = var.name
-  tags   = merge({ Name = var.name }, var.tags)
+  tags   = local.tags
   vpc_id = module.get-subnets[0].vpc.id
 
   egress {
@@ -88,7 +90,7 @@ resource "aws_security_group" "default" {
 resource "aws_iam_role" "ecs_events_role" {
   assume_role_policy = data.aws_iam_policy_document.ecs_events_policy.json
   name               = var.name
-  tags               = merge({ Name = var.name }, var.tags)
+  tags               = local.tags
 }
 
 resource "aws_iam_role_policy_attachment" "events_service_role_attachment" {
