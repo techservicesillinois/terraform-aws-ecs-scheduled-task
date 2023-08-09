@@ -10,6 +10,7 @@ module "get-subnets" {
 
 locals {
   module_subnet_ids = var.network_configuration.subnet_type != null ? try(module.get-subnets[0].subnets.ids, []) : []
+  tags              = merge({ Name = var.name }, var.tags)
 }
 
 data "aws_ecs_cluster" "selected" {
