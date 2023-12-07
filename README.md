@@ -32,7 +32,7 @@ Argument Reference
 
 * `desired_count` - The number of instances of the task definition to place and keep  running. (Default = `1`)
 
-* `is_enabled` - Whether the rule should be enabled (Default = `true`).
+* `state` - State of the rule, valid options are ENABLED, ENABLED_WITH_ALL_CLOUDTRAIL_MANAGEMENT_EVENTS, or DISABLED. (Default = `ENABLED`)
 
 * `launch_type` - The launch type on which to run the service. The valid values are EC2 and FARGATE. (Default = `FARGATE`)
 
@@ -247,7 +247,7 @@ Attributes Reference
 
 The following attributes are exported:
 
-* `is_enabled` – Is the task enabled.
+* `state` – Is the task enabled.
 
 * `name` - The name of the scheduled task.
 

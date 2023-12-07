@@ -8,9 +8,15 @@ variable "desired_count" {
   default     = 1
 }
 
-variable "is_enabled" {
-  description = "Whether the rule should be enabled (defaults to true)."
-  default     = true
+variable "state" {
+  description = "State of the rule, valid options are ENABLED (default), ENABLED_WITH_ALL_CLOUDTRAIL_MANAGEMENT_EVENTS, or DISABLED."
+  default     = "ENABLED"
+
+  validation {
+    condition = try(contains(["ENABLED", "ENABLED_WITH_ALL_CLOUDTRAIL_MANAGEMENT_EVENTS", "DISABLED"],
+    var.state), true)
+    error_message = "The 'state' is not one of the valid values."
+  }
 }
 
 variable "launch_type" {

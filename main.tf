@@ -43,7 +43,7 @@ resource "aws_ecs_task_definition" "default" {
 }
 
 resource "aws_cloudwatch_event_rule" "default" {
-  is_enabled          = var.is_enabled
+  state               = var.state
   name                = var.name
   schedule_expression = var.schedule_expression
   tags                = local.tags

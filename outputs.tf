@@ -10,6 +10,6 @@ output "schedule_expression" {
   value = aws_cloudwatch_event_rule.default.schedule_expression
 }
 
-output "is_enabled" {
-  value = aws_cloudwatch_event_rule.default.is_enabled
+output "state" {
+  value = aws_cloudwatch_event_rule.default.state
 }
