@@ -13,8 +13,7 @@ variable "state" {
   default     = "ENABLED"
 
   validation {
-    condition = try(contains(["ENABLED", "ENABLED_WITH_ALL_CLOUDTRAIL_MANAGEMENT_EVENTS", "DISABLED"],
-    var.state), true)
+    condition     = try(contains(["ENABLED", "ENABLED_WITH_ALL_CLOUDTRAIL_MANAGEMENT_EVENTS", "DISABLED"], var.state), true)
     error_message = "The 'state' is not one of the valid values."
   }
 }
