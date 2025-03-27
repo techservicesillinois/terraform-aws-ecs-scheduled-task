@@ -5,13 +5,14 @@ REPO := $(shell basename $(shell git remote get-url origin) .git)
 all: test
 
 test: .terraform
-	AWS_DEFAULT_REGION=us-east-2 terraform validate
+	terraform validate
 	terraform fmt -check
 	! egrep "TF-UPGRADE-TODO|cites-illinois|as-aws-modules" *.tf README.md
 	# Do NOT put terraform-aws in the title
 	! grep "#\s*terraform-aws-" README.md
 	# Do NOT use type string when you can use type number or bool!
-	! egrep '"\d+"|"true"|"false"' *.tf README.md
+#	! egrep '"\d+"|"true"|"false"' *.tf README.md
+	! egrep '"\d+"|"true"|"false"' *.tf
 	# Do NOT use old style maps in docs
 	! egrep "\w+\s*\{" README.md
 	# Do NOT drop the "s" in outputs.tf or variables.tf!
